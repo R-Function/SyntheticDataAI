@@ -1,8 +1,7 @@
 import sys
 
 def main() -> int:
-    # hier die abfolge des trainings und der ecvaluation einfühgen
-    return
+    pass
 
 
 if __name__ == '__main__':

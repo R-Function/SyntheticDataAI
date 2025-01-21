@@ -1,17 +1,10 @@
 #5 Creating Captions using Trained Model
 import numpy as np
-from pickle import load
 from numpy import argmax
 from keras.api._tf_keras.keras.preprocessing.sequence import pad_sequences
-from keras.api._tf_keras.keras.applications.vgg16 import VGG16
 from keras.api._tf_keras.keras.preprocessing.image import load_img
 from keras.api._tf_keras.keras.preprocessing.image import img_to_array
 from keras.api._tf_keras.keras.applications.vgg16 import preprocess_input
-from keras.api._tf_keras.keras.models import Model
-from keras.api._tf_keras.keras.models import load_model
-
-base_model = VGG16(include_top=True)
-feature_extract_pred_model = Model(inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
 
 def extract_feature(model, file_name):
     img = load_img(file_name, target_size=(224, 224)) #size is 224,224 by default
@@ -20,14 +13,6 @@ def extract_feature(model, file_name):
     x = preprocess_input(x) #make input confirm to VGG16 input format
     fc2_features = model.predict(x)
     return fc2_features
-
-# load the tokenizer
-caption_train_tokenizer = load(open('caption_train_tokenizer.pkl', 'rb'))
-# pre-define the max sequence length (from training)
-max_length = 33
-# load the model
-#pred_model = load_model('model_3_0.h5')
-pred_model = load_model('modelConcat_1a_2.h5')
 
 def generate_caption(pred_model, caption_train_tokenizer, photo, max_length):
     in_text = '<START>'
@@ -55,12 +40,6 @@ def generate_caption(pred_model, caption_train_tokenizer, photo, max_length):
             if word == 'end':
                 break
     return caption_text
-
-caption_image_fileName = 'running-dogs.jpg'
-photo = extract_feature(feature_extract_pred_model, caption_image_fileName)
-caption = generate_caption(pred_model, caption_train_tokenizer, photo, max_length)
-print(' '.join(caption))
-
 
 #6 Beam Search
 def flatten(lst):
@@ -120,12 +99,3 @@ def generate_caption_beam(pred_model, caption_train_tokenizer, photo, max_length
 
 
     return final_caption, most_likely_prob
-
-photo = extract_feature(feature_extract_pred_model, 'running-dogs.jpg')
-
-vocab_size = 7506
-beam_width = 10
-max_length = 33
-caption, prob = generate_caption_beam(pred_model, caption_train_tokenizer, photo, max_length,vocab_size,beam_width)
-print(caption)
-print(prob)
