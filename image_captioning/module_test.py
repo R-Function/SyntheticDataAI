@@ -7,8 +7,8 @@ from keras.api._tf_keras.keras.models import load_model
 from keras.api._tf_keras.keras.applications.vgg16 import VGG16
 from keras.api._tf_keras.keras.models import Model
 # eigene module
-from image_captioning.data_handler import DataHandler
-from image_captioning.execute_model import extract_feature, generate_caption, generate_caption_beam
+from data_handler import DataHandler
+from execute_model import extract_feature, generate_caption, generate_caption_beam
 
 
 def execute_model_test():

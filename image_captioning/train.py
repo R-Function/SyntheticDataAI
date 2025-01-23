@@ -2,10 +2,10 @@ import numpy as np
 from pickle import load
 from keras.api._tf_keras.keras.models import Model
 
-from image_captioning.data_handler import DataHandler
-from image_captioning.image_caption_cnn import define_model_concat
+from data_handler import DataHandler
+from image_caption_cnn import define_model_concat
 
-def train(post_rnn_model_concat : Model, data_loader : DataHandler, caption_max_length, vocab_size, batch_size, epochs):
+def train(post_rnn_model_concat : Model, data_handler : DataHandler, caption_max_length, vocab_size, batch_size, epochs):
 	
 
 	#4 Training Model
@@ -38,7 +38,7 @@ def train(post_rnn_model_concat : Model, data_loader : DataHandler, caption_max_
 
 	for i in range(epochs):
 		# create the data generator
-		generator = data_loader.data_generator(image_captions_train, image_features, caption_train_tokenizer, caption_max_length, batch_size, vocab_size)
+		generator = data_handler.data_generator(image_captions_train, image_features, caption_train_tokenizer, caption_max_length, batch_size, vocab_size)
 		# fit for one epoch
 		post_rnn_model_concat_hist=post_rnn_model_concat.fit_generator(generator, epochs=1, steps_per_epoch=steps, verbose=1)
 		# save model
