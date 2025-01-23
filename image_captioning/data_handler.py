@@ -6,24 +6,29 @@
 #    Add 'START' and 'END' to the target data
 
 # 2.1 Loading Data Sets Image ID
+from os import listdir
 import string
 import numpy as np
 from pickle import dump
 from collections import Counter
 from keras.api._tf_keras.keras.preprocessing.text import Tokenizer
 from keras.api._tf_keras.keras.preprocessing.sequence import pad_sequences
+from keras.api._tf_keras.keras.preprocessing.image import load_img
+from keras.api._tf_keras.keras.preprocessing.image import img_to_array
+from keras.api._tf_keras.keras.applications.vgg16 import preprocess_input
 from keras.api._tf_keras.keras.utils import to_categorical
+from keras.api._tf_keras.keras.models import Model
     
-class DataLoader:
+class DataHandler:
     def __init__(self, filename : string):
         self.filename = filename
         file = open(filename, 'r')
         self.token_text = file.read()
         file.close()
 
-        self.training_set = self.load_data_set_ids('Flickr_8k.trainImages.txt')
-        self.dev_set = self.load_data_set_ids('Flickr_8k.devImages.txt')
-        self.test_set = self.load_data_set_ids('Flickr_8k.testImages.txt')
+        self.training_set = self._load_data_set_ids('Flickr_8k.trainImages.txt')
+        self.dev_set = self._load_data_set_ids('Flickr_8k.devImages.txt')
+        self.test_set = self._load_data_set_ids('Flickr_8k.testImages.txt')
 
         self.translator = str.maketrans("", "", string.punctuation) #translation table that maps all punctuation to None
         self.image_captions = dict()
@@ -35,22 +40,8 @@ class DataLoader:
         self.corpus.extend(['<START>', '<END>', '<UNK>']) #add SOS and EOS to list first
 
 
-    def load_data_set_ids(self, filename):
-        file = open(filename, 'r')
-        text = file.read()
-        file.close()
-        
-        dataset = list()
-        for image_id in text.split('\n'):
-            if len(image_id) < 1:
-                continue   
-            dataset.append(image_id)
 
-        return set(dataset)
-
-
-    def load_initial_data(self):
-        filename = 'Flickr8k.token.txt'
+    def initialize_data(self):
         max_imageCap_len = 0
 
         for line in self.token_text.split('\n'): # first split on new line
@@ -140,8 +131,72 @@ class DataLoader:
         print("maximum image caption length =",max_imageCap_len)
 
 
+    def initialize_pretrained_model(self):
+        EMBEDDING_DIM = 50
+        
+        embeddings_index = dict()
+        fid = open('glove.6B.50d.txt' ,encoding="utf8")
+        for line in fid:
+            values = line.split()
+            word = values[0]
+            coefs = np.asarray(values[1:], dtype='float32')
+            embeddings_index[word] = coefs
+        fid.close()
+
+        word_index = self.caption_train_tokenizer.word_index
+        embedding_matrix = np.zeros((len(word_index) + 1, EMBEDDING_DIM))
+
+        for word, idx in word_index.items():
+            embed_vector = embeddings_index.get(word)
+            if embed_vector is not None:
+                # words not found in embedding index will be all-zeros.
+                embedding_matrix[idx] = embed_vector
+                
+        fid = open("embedding_matrix.pkl","wb")
+        dump(embedding_matrix, fid)
+        fid.close()
+
+    def initialize_flicker8k(model : Model):
+        features = dict()
+        for file in listdir('Flicker8k_Dataset'):
+            img_path = 'Flicker8k_Dataset/' + file
+            img = load_img(img_path, target_size=(224, 224)) #size is 224,224 by default
+            x = img_to_array(img) #change to np array
+            x = np.expand_dims(x, axis=0) #expand to include batch dim at the beginning
+            x = preprocess_input(x) #make input confirm to VGG16 input format
+            fc2_features = model.predict(x)
+            
+            name_id = file.split('.')[0] #take the file name and use as id in dict
+            features[name_id] = fc2_features
+
+        dump(features, open('features.pkl', 'wb')) #cannot use JSON because ndarray is not JSON serializable
+
+
+    # data generator, intended to be used in a call to model.fit_generator()
+    def data_generator(self, descriptions, photos, tokenizer, max_length, batch_size, vocab_size):
+        # loop for ever over images
+        current_batch_size=0
+        while 1:
+            for key, desc_list in descriptions.items():
+                # retrieve the photo feature
+                if current_batch_size == 0:
+                    X1, X2, Y = list(), list(), list()
+                
+                imageFeature_id = key.split('.')[0]
+                photo = photos[imageFeature_id][0]
+                in_img, in_seq, out_word = self._create_sequences(tokenizer, max_length, desc_list, photo, vocab_size)
+                #in_img = np.squeeze(in_img)
+                X1.extend(in_img)
+                X2.extend(in_seq)
+                Y.extend(out_word)
+                current_batch_size += 1
+                if current_batch_size == batch_size:
+                    current_batch_size = 0
+                    yield [[np.array(X1), np.array(X2)], np.array(Y)]
+
+
     # 2.3 Generating Training Data for Progressive Loading
-    def create_sequences(self, tokenizer, max_length, desc_list, photo, vocab_size):
+    def _create_sequences(self, tokenizer, max_length, desc_list, photo, vocab_size):
         X1, X2, y = list(), list(), list()
         # walk through each description for the image
         for desc in desc_list:
@@ -162,24 +217,15 @@ class DataLoader:
                 y.append(out_seq)
         return np.array(np.squeeze(X1)), np.array(X2), np.array(y)
 
-    # data generator, intended to be used in a call to model.fit_generator()
-    def data_generator(self, descriptions, photos, tokenizer, max_length, batch_size, vocab_size):
-        # loop for ever over images
-        current_batch_size=0
-        while 1:
-            for key, desc_list in descriptions.items():
-                # retrieve the photo feature
-                if current_batch_size == 0:
-                    X1, X2, Y = list(), list(), list()
-                
-                imageFeature_id = key.split('.')[0]
-                photo = photos[imageFeature_id][0]
-                in_img, in_seq, out_word = self.create_sequences(tokenizer, max_length, desc_list, photo, vocab_size)
-                #in_img = np.squeeze(in_img)
-                X1.extend(in_img)
-                X2.extend(in_seq)
-                Y.extend(out_word)
-                current_batch_size += 1
-                if current_batch_size == batch_size:
-                    current_batch_size = 0
-                    yield [[np.array(X1), np.array(X2)], np.array(Y)]
+    def _load_data_set_ids(self, filename):
+        file = open(filename, 'r')
+        text = file.read()
+        file.close()
+        
+        dataset = list()
+        for image_id in text.split('\n'):
+            if len(image_id) < 1:
+                continue   
+            dataset.append(image_id)
+
+        return set(dataset)

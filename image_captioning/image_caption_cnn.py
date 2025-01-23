@@ -7,13 +7,16 @@ from keras.api._tf_keras.keras.layers import Input
 from keras.api._tf_keras.keras.layers import Embedding
 from keras.api._tf_keras.keras.layers import Dropout
 from keras.api._tf_keras.keras.layers import Dense
+from keras.api._tf_keras.keras.layers import LSTM
 from keras.api._tf_keras.keras.models import Model
 
-base_model = VGG16(include_top=True)
-base_model.summary()
+def get_initial_model() -> Model:
+    base_model = VGG16(include_top=True)
+    base_model.summary()
 
-model = Model(inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
-model.summary()
+    model = Model(inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
+    model.summary()
+    return model
 
 
 
@@ -40,11 +43,3 @@ def define_model_concat(vocab_size, max_length, embedding_matrix):
     print(model.summary())
     plot_model(model, to_file='model_concat.png', show_shapes=True)
     return model
-
-fid = open("embedding_matrix.pkl","rb")
-embedding_matrix = load(fid)
-fid.close()
-
-caption_max_length = 33
-vocab_size = 7506
-post_rnn_model_concat = define_model_concat(vocab_size, caption_max_length, embedding_matrix)

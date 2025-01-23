@@ -1,16 +1,13 @@
 # fremde bibliotheken
 import numpy as np
 from os import listdir
-from pickle import dump, load
+from pickle import load
 from keras.api._tf_keras.keras.models import Model
 from keras.api._tf_keras.keras.models import load_model
 from keras.api._tf_keras.keras.applications.vgg16 import VGG16
-from keras.api._tf_keras.keras.preprocessing.image import load_img
-from keras.api._tf_keras.keras.preprocessing.image import img_to_array
-from keras.api._tf_keras.keras.applications.vgg16 import preprocess_input
 from keras.api._tf_keras.keras.models import Model
 # eigene module
-from image_captioning.data_loader import DataLoader
+from image_captioning.data_handler import DataHandler
 from image_captioning.execute_model import extract_feature, generate_caption, generate_caption_beam
 
 
@@ -38,30 +35,8 @@ def execute_model_test():
     print(prob)
 
 #Test erst ausführen, wenn load_initial_data() gemacht wurde
-def data_loader_test(data_loader : DataLoader):
-    # 2.2 Using Pretrained Embeddings
-    embeddings_index = dict()
-    fid = open('glove.6B.50d.txt' ,encoding="utf8")
-    for line in fid:
-        values = line.split()
-        word = values[0]
-        coefs = np.asarray(values[1:], dtype='float32')
-        embeddings_index[word] = coefs
-    fid.close()
-
-    EMBEDDING_DIM = 50
-    word_index = data_loader.caption_train_tokenizer.word_index
-    embedding_matrix = np.zeros((len(word_index) + 1, EMBEDDING_DIM))
-
-    for word, idx in word_index.items():
-        embed_vector = embeddings_index.get(word)
-        if embed_vector is not None:
-            # words not found in embedding index will be all-zeros.
-            embedding_matrix[idx] = embed_vector
-            
-    fid = open("embedding_matrix.pkl","wb")
-    dump(embedding_matrix, fid)
-    fid.close()
+def data_loader_test(data_loader : DataHandler):
+    
 
     fid = open('features.pkl', 'rb')
     image_features = load(fid)
@@ -77,17 +52,3 @@ def data_loader_test(data_loader : DataLoader):
     print(outputs.shape)
 
 
-def flicker8k_test(model : Model):
-    features = dict()
-    for file in listdir('Flicker8k_Dataset'):
-        img_path = 'Flicker8k_Dataset/' + file
-        img = load_img(img_path, target_size=(224, 224)) #size is 224,224 by default
-        x = img_to_array(img) #change to np array
-        x = np.expand_dims(x, axis=0) #expand to include batch dim at the beginning
-        x = preprocess_input(x) #make input confirm to VGG16 input format
-        fc2_features = model.predict(x)
-        
-        name_id = file.split('.')[0] #take the file name and use as id in dict
-        features[name_id] = fc2_features
-
-    dump(features, open('features.pkl', 'wb')) #cannot use JSON because ndarray is not JSON serializable
