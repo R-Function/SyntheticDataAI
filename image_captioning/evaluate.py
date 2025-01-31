@@ -137,9 +137,11 @@ def eval_BLEU(beam_width = _std_beam_width, vocab_size = _std_vocab_size, max_le
                             str(np.max(bleu_score_beam_5array)),
                             str(np.min(bleu_score_beam_5array)),
                             str(np.std(bleu_score_beam_5array))]
+    
+    # tabelle erzeugen
     row_lable = ["mean", "median", "max", "min", "STD"]
     col_lable = ["BLEU Score", "Greedy", f"Beam Search width {beam_width}"]
-    data = np.array([["" for _ in range(3)] for _ in range(5)])
+    data = np.array([["123456" for _ in range(3)] for _ in range(5)])
     fig, ax = plt.subplots()
     ax.axis("tight")
     ax.axis("off")
@@ -157,6 +159,7 @@ def eval_BLEU(beam_width = _std_beam_width, vocab_size = _std_vocab_size, max_le
         cell.set_text_props(fontsize=10)  # Adjust font size if necessary
         cell.set_edgecolor('black')
     
+    plt.savefig(fname="image_captioning/data/eval_data/BLEU_Score.png", pad_inches=0.01)
     plt.show()
 
 
@@ -230,3 +233,35 @@ def eval_ROUGE(beam_width = _std_beam_width, vocab_size = _std_vocab_size, max_l
         rouge_2_f_score_array[idx] = val['rouge_2/f_score']
         rouge_l_f_score_array[idx] = val['rouge_l/f_score']
         idx += 1
+
+    rouge_greedy_mean = [str(np.mean(rouge_1_f_score_array)),
+                        str(np.median(rouge_2_f_score_array)),
+                        str(np.max(rouge_l_f_score_array))]
+    
+    rouge_beam_mean = [str(np.mean(rouge_1_f_score_beam5_array)),
+                        str(np.median(rouge_2_f_score_beam5_array)),
+                        str(np.max(rouge_l_f_score_beam5_array))]
+
+    # tabelle erzeugen
+    row_lable = ["rouge_1/f_score", "rouge_2/f_score", "rouge_l/f_score"]
+    col_lable = ["Stat", "Greedy Mean", f"Beam Search Mean width {beam_width}"]
+    data = np.array([["platzhalterwort" for _ in range(3)] for _ in range(3)])
+    fig, ax = plt.subplots()
+    ax.axis("tight")
+    ax.axis("off")
+    for i in range(len(row_lable)):
+        print(row_lable[i])
+        data[i, 0] = row_lable[i]
+        data[i, 1] = rouge_greedy_mean[i]
+        data[i, 2] = rouge_beam_mean[i]
+    
+    table = ax.table(cellText=data,
+                    colLabels=col_lable,
+                    loc="center")
+    table.auto_set_column_width([0, 1, 2])
+    for (i, j), cell in table.get_celld().items():
+        cell.set_text_props(fontsize=10)  # Adjust font size if necessary
+        cell.set_edgecolor('black')
+    
+    plt.savefig(fname="image_captioning/data/eval_data/ROUGE_Score.png", pad_inches=0.01)
+    plt.show()
