@@ -66,7 +66,8 @@ def generate_caption_beam(pred_model, caption_train_tokenizer, photo, max_length
                 sequence = caption_train_tokenizer.texts_to_sequences(most_likely_cap[j])
                 sequence = pad_sequences(np.transpose(sequence), maxlen=max_length)
                 model_softMax_output = pred_model.predict([photo,sequence], verbose=0)
-                temp_prob[j,] = (1/(num_words)) *(most_likely_prob[j]*(num_words-1) + np.log(model_softMax_output)) #update most likily prob
+                if num_words > 0: # sonst devide by zero bei erster iteration
+                    temp_prob[j,] = (1/(num_words)) *(most_likely_prob[j]*(num_words-1) + np.log(model_softMax_output)) #update most likily prob
             else:
                 temp_prob[j,] = most_likely_prob[j] + np.zeros(vocab_size) - np.inf
                 temp_prob[j,0] = most_likely_prob[j]

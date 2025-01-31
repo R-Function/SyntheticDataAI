@@ -1,2 +1,4 @@
 image_captioning/data/Flickr8k
 image_captioning/data/COCO
+image_captioning/trained_models
+image_captioning/data/word_embeddings

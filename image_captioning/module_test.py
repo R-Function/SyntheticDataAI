@@ -14,19 +14,19 @@ from execute_model import extract_feature, generate_caption, generate_caption_be
 def execute_model_test():
     base_model = VGG16(include_top=True)
     feature_extract_pred_model = Model(inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
-    caption_train_tokenizer = load(open('caption_train_tokenizer.pkl', 'rb'))
+    caption_train_tokenizer = load(open('image_captioning/data/Flickr8k/train_data/caption_train_tokenizer.pkl', 'rb'))
     # pre-define the max sequence length (from training)
     max_length = 33
     # load the model
     #pred_model = load_model('model_3_0.h5')
-    pred_model = load_model('modelConcat_1a_2.h5')
+    pred_model = load_model('image_captioning/trained_models/modelConcat_1_2.h5')
     
-    caption_image_fileName = 'running-dogs.jpg'
+    caption_image_fileName = 'image_captioning/test/women_cafe.jpg'
     photo = extract_feature(feature_extract_pred_model, caption_image_fileName)
     caption = generate_caption(pred_model, caption_train_tokenizer, photo, max_length)
     print(' '.join(caption))
 
-    photo = extract_feature(feature_extract_pred_model, 'running-dogs.jpg')
+    photo = extract_feature(feature_extract_pred_model, caption_image_fileName)
     vocab_size = 7506
     beam_width = 10
     max_length = 33

@@ -20,15 +20,16 @@ from keras.api._tf_keras.keras.utils import to_categorical
 from keras.api._tf_keras.keras.models import Model
     
 class DataHandler:
-    def __init__(self, directory : string):
-        self.directory = directory
-        file = open(self.directory + '/Flickr8k_text/Flickr8k.token.txt', 'r')
+    def __init__(self, flickr_dir : string, embedding_dir : string):
+        self.flickr_dir = flickr_dir
+        self.embedding_dir = embedding_dir
+        file = open(self.flickr_dir + '/Flickr8k_text/Flickr8k.token.txt', 'r')
         self.token_text = file.read()
         file.close()
 
-        self.training_set = self._load_data_set_ids(self.directory + 'Flickr8k_text/Flickr_8k.trainImages.txt')
-        self.dev_set = self._load_data_set_ids(self.directory + 'Flickr8k_text/Flickr_8k.devImages.txt')
-        self.test_set = self._load_data_set_ids(self.directory + 'Flickr8k_text/Flickr_8k.testImages.txt')
+        self.training_set = self._load_data_set_ids(self.flickr_dir + 'Flickr8k_text/Flickr_8k.trainImages.txt')
+        self.dev_set = self._load_data_set_ids(self.flickr_dir + 'Flickr8k_text/Flickr_8k.devImages.txt')
+        self.test_set = self._load_data_set_ids(self.flickr_dir + 'Flickr8k_text/Flickr_8k.testImages.txt')
 
         self.translator = str.maketrans("", "", string.punctuation) #translation table that maps all punctuation to None
         self.image_captions             = dict()
@@ -92,40 +93,40 @@ class DataHandler:
                     self.image_captions_other[image_id] = list() #creat a new list if it does not yet exist
                 self.image_captions_other[image_id].append(image_cap)
     
-        caption_train_tokenizer = Tokenizer() #initialize tokenizer
-        caption_train_tokenizer.fit_on_texts(self.corpus) #fit tokenizer on training data
+        self.caption_train_tokenizer = Tokenizer() #initialize tokenizer
+        self.caption_train_tokenizer.fit_on_texts(self.corpus) #fit tokenizer on training data
 
         # test   
-        fid = open(self.directory + "train_data/image_captions.pkl","wb")
+        fid = open(self.flickr_dir + "train_data/image_captions.pkl","wb")
         dump(self.image_captions, fid)
         fid.close()
 
-        fid = open(self.directory + "train_data/image_captions_train.pkl","wb")
+        fid = open(self.flickr_dir + "train_data/image_captions_train.pkl","wb")
         dump(self.image_captions_train, fid)
         fid.close()
 
-        fid = open(self.directory + "train_data/image_captions_dev.pkl","wb")
+        fid = open(self.flickr_dir + "train_data/image_captions_dev.pkl","wb")
         dump(self.image_captions_dev, fid)
         fid.close()
 
-        fid = open(self.directory + "train_data/image_captions_test.pkl","wb")
+        fid = open(self.flickr_dir + "train_data/image_captions_test.pkl","wb")
         dump(self.image_captions_test, fid)
         fid.close()
 
-        fid = open(self.directory + "train_data/image_captions_other.pkl","wb")
+        fid = open(self.flickr_dir + "train_data/image_captions_other.pkl","wb")
         dump(self.image_captions_other, fid)
         fid.close()
 
-        fid = open(self.directory + "train_data/caption_train_tokenizer.pkl","wb")
+        fid = open(self.flickr_dir + "train_data/caption_train_tokenizer.pkl","wb")
         dump(self.caption_train_tokenizer, fid)
         fid.close()
 
-        fid = open(self.directory + "train_data/corpus.pkl","wb")
+        fid = open(self.flickr_dir + "train_data/corpus.pkl","wb")
         dump(self.corpus, fid)
         fid.close()
 
         corpus_count=Counter(self.corpus)
-        fid = open(self.directory + "train_data/corpus_count.pkl","wb")
+        fid = open(self.flickr_dir + "train_data/corpus_count.pkl","wb")
         dump(corpus_count, fid)
         fid.close()
 
@@ -134,16 +135,18 @@ class DataHandler:
 
 
     def initialize_pretrained_model(self):
-        EMBEDDING_DIM = 50
-        
+        EMBEDDING_DIM   = 50
+        glove_embedding = path.join(self.embedding_dir, "glove.6B/glove.6B.50d.txt")
+
         embeddings_index = dict()
-        fid = open('glove.6B.50d.txt' ,encoding="utf8")
+        fid = open(glove_embedding,encoding="utf8")
         for line in fid:
             values = line.split()
             word = values[0]
             coefs = np.asarray(values[1:], dtype='float32')
             embeddings_index[word] = coefs
         fid.close()
+
 
         word_index = self.caption_train_tokenizer.word_index
         embedding_matrix = np.zeros((len(word_index) + 1, EMBEDDING_DIM))
@@ -154,14 +157,14 @@ class DataHandler:
                 # words not found in embedding index will be all-zeros.
                 embedding_matrix[idx] = embed_vector
                 
-        fid = open(self.directory + "train_data/embedding_matrix.pkl","wb")
+        fid = open(self.flickr_dir + "train_data/embedding_matrix.pkl","wb")
         dump(embedding_matrix, fid)
         fid.close()
 
     def initialize_flicker8k(self, model : Model):
         features = dict()
-        for file in listdir(self.directory + 'Flickr8k_Dataset/Flickr8k_Dataset'):
-            img_path = path.join(self. directory, 'Flickr8k_Dataset/Flickr8k_Dataset', file)
+        for file in listdir(self.flickr_dir + 'Flickr8k_Dataset/Flickr8k_Dataset'):
+            img_path = path.join(self. flickr_dir, 'Flickr8k_Dataset/Flickr8k_Dataset', file)
             img = load_img(img_path, target_size=(224, 224)) #size is 224,224 by default
             x = img_to_array(img) #change to np array
             x = np.expand_dims(x, axis=0) #expand to include batch dim at the beginning
@@ -171,7 +174,7 @@ class DataHandler:
             name_id = file.split('.')[0] #take the file name and use as id in dict
             features[name_id] = fc2_features
 
-        dump(features, open(self.directory + 'train_data/features.pkl', 'wb')) #cannot use JSON because ndarray is not JSON serializable
+        dump(features, open(self.flickr_dir + 'train_data/features.pkl', 'wb')) #cannot use JSON because ndarray is not JSON serializable
 
 
     # data generator, intended to be used in a call to model.fit_generator()
@@ -194,7 +197,10 @@ class DataHandler:
                 current_batch_size += 1
                 if current_batch_size == batch_size:
                     current_batch_size = 0
-                    yield [[np.array(X1), np.array(X2)], np.array(Y)]
+                    #print("Shape of X1", np.array(X1).shape)
+                    #print("Shape of X2", np.array(X2).shape)
+                    #print("Shape of Y", np.array(Y).shape)
+                    yield (np.array(X1), np.array(X2)), np.array(Y)
 
 
     # 2.3 Generating Training Data for Progressive Loading

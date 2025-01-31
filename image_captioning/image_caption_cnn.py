@@ -41,5 +41,5 @@ def define_model_concat(vocab_size, max_length, embedding_matrix):
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
     # summarize model
     print(model.summary())
-    plot_model(model, to_file='model_concat.png', show_shapes=True)
+    plot_model(model, to_file='image_captioning/trained_models/model_concat.png', show_shapes=True)
     return model

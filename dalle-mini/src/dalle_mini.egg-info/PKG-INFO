@@ -1,13 +1,11 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.2
 Name: dalle-mini
 Version: 0.1.5
 Summary: DALL·E mini - Generate images from a text prompt
 Home-page: https://github.com/borisdayma/dalle-mini
 Author: Boris Dayma et al.
 Author-email: boris.dayma@gmail.com
-License: UNKNOWN
 Project-URL: Bug Tracker, https://github.com/borisdayma/dalle-mini/issues
-Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: Apache Software License
 Classifier: Operating System :: OS Independent
@@ -16,8 +14,24 @@ Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Developers
 Requires-Python: >=3.6
 Description-Content-Type: text/markdown
-Provides-Extra: dev
 License-File: LICENSE
+Requires-Dist: transformers==4.25.1
+Requires-Dist: einops
+Requires-Dist: unidecode
+Requires-Dist: ftfy
+Requires-Dist: emoji
+Requires-Dist: pillow
+Requires-Dist: jax==0.3.25
+Requires-Dist: flax==0.6.3
+Requires-Dist: orbax==0.0.23
+Requires-Dist: wandb
+Provides-Extra: dev
+Requires-Dist: tqdm; extra == "dev"
+Requires-Dist: optax; extra == "dev"
+Requires-Dist: braceexpand; extra == "dev"
+Requires-Dist: datasets[streaming]; extra == "dev"
+Requires-Dist: black[jupyter]; extra == "dev"
+Requires-Dist: isort; extra == "dev"
 
 # DALL·E Mini
 
@@ -291,5 +305,3 @@ Main optimizer (Distributed Shampoo) from "[Scalable Second Order Optimization f
   year = {2022},
 }
 ```
-
-
