@@ -21,7 +21,7 @@ def execute_model_test():
     #pred_model = load_model('model_3_0.h5')
     pred_model = load_model('image_captioning/trained_models/modelConcat_1_2.h5')
     
-    caption_image_fileName = 'image_captioning/test/women_cafe.jpg'
+    caption_image_fileName = 'image_captioning/test/beachball_people.jpg'
     photo = extract_feature(feature_extract_pred_model, caption_image_fileName)
     caption = generate_caption(pred_model, caption_train_tokenizer, photo, max_length)
     print(' '.join(caption))
