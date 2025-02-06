@@ -20,16 +20,16 @@ from keras.api._tf_keras.keras.utils import to_categorical
 from keras.api._tf_keras.keras.models import Model
     
 class DataHandler:
-    def __init__(self, flickr_dir : string, embedding_dir : string):
-        self.flickr_dir = flickr_dir
+    def __init__(self, train_data_dir : string, embedding_dir : string):
+        self.train_data_dir = train_data_dir
         self.embedding_dir = embedding_dir
-        file = open(self.flickr_dir + '/Flickr8k_text/Flickr8k.token.txt', 'r')
+        file = open(self.train_data_dir + '/Flickr8k_text/Flickr8k.token.txt', 'r')
         self.token_text = file.read()
         file.close()
 
-        self.training_set = self._load_data_set_ids(self.flickr_dir + 'Flickr8k_text/Flickr_8k.trainImages.txt')
-        self.dev_set = self._load_data_set_ids(self.flickr_dir + 'Flickr8k_text/Flickr_8k.devImages.txt')
-        self.test_set = self._load_data_set_ids(self.flickr_dir + 'Flickr8k_text/Flickr_8k.testImages.txt')
+        self.training_set = self._load_data_set_ids(self.train_data_dir + 'Flickr8k_text/Flickr_8k.trainImages.txt')
+        self.dev_set = self._load_data_set_ids(self.train_data_dir + 'Flickr8k_text/Flickr_8k.devImages.txt')
+        self.test_set = self._load_data_set_ids(self.train_data_dir + 'Flickr8k_text/Flickr_8k.testImages.txt')
 
         self.translator = str.maketrans("", "", string.punctuation) #translation table that maps all punctuation to None
         self.image_captions             = dict()
@@ -97,36 +97,36 @@ class DataHandler:
         self.caption_train_tokenizer.fit_on_texts(self.corpus) #fit tokenizer on training data
 
         # test   
-        fid = open(self.flickr_dir + "train_data/image_captions.pkl","wb")
+        fid = open(self.train_data_dir + "train_data/image_captions.pkl","wb")
         dump(self.image_captions, fid)
         fid.close()
 
-        fid = open(self.flickr_dir + "train_data/image_captions_train.pkl","wb")
+        fid = open(self.train_data_dir + "train_data/image_captions_train.pkl","wb")
         dump(self.image_captions_train, fid)
         fid.close()
 
-        fid = open(self.flickr_dir + "train_data/image_captions_dev.pkl","wb")
+        fid = open(self.train_data_dir + "train_data/image_captions_dev.pkl","wb")
         dump(self.image_captions_dev, fid)
         fid.close()
 
-        fid = open(self.flickr_dir + "train_data/image_captions_test.pkl","wb")
+        fid = open(self.train_data_dir + "train_data/image_captions_test.pkl","wb")
         dump(self.image_captions_test, fid)
         fid.close()
 
-        fid = open(self.flickr_dir + "train_data/image_captions_other.pkl","wb")
+        fid = open(self.train_data_dir + "train_data/image_captions_other.pkl","wb")
         dump(self.image_captions_other, fid)
         fid.close()
 
-        fid = open(self.flickr_dir + "train_data/caption_train_tokenizer.pkl","wb")
+        fid = open(self.train_data_dir + "train_data/caption_train_tokenizer.pkl","wb")
         dump(self.caption_train_tokenizer, fid)
         fid.close()
 
-        fid = open(self.flickr_dir + "train_data/corpus.pkl","wb")
+        fid = open(self.train_data_dir + "train_data/corpus.pkl","wb")
         dump(self.corpus, fid)
         fid.close()
 
         corpus_count=Counter(self.corpus)
-        fid = open(self.flickr_dir + "train_data/corpus_count.pkl","wb")
+        fid = open(self.train_data_dir + "train_data/corpus_count.pkl","wb")
         dump(corpus_count, fid)
         fid.close()
 
@@ -157,14 +157,14 @@ class DataHandler:
                 # words not found in embedding index will be all-zeros.
                 embedding_matrix[idx] = embed_vector
                 
-        fid = open(self.flickr_dir + "train_data/embedding_matrix.pkl","wb")
+        fid = open(self.train_data_dir + "train_data/embedding_matrix.pkl","wb")
         dump(embedding_matrix, fid)
         fid.close()
 
     def initialize_flicker8k(self, model : Model):
         features = dict()
-        for file in listdir(self.flickr_dir + 'Flickr8k_Dataset/Flickr8k_Dataset'):
-            img_path = path.join(self. flickr_dir, 'Flickr8k_Dataset/Flickr8k_Dataset', file)
+        for file in listdir(self.train_data_dir + 'Flickr8k_Dataset/Flickr8k_Dataset'):
+            img_path = path.join(self. train_data_dir, 'Flickr8k_Dataset/Flickr8k_Dataset', file)
             img = load_img(img_path, target_size=(224, 224)) #size is 224,224 by default
             x = img_to_array(img) #change to np array
             x = np.expand_dims(x, axis=0) #expand to include batch dim at the beginning
@@ -174,7 +174,7 @@ class DataHandler:
             name_id = file.split('.')[0] #take the file name and use as id in dict
             features[name_id] = fc2_features
 
-        dump(features, open(self.flickr_dir + 'train_data/features.pkl', 'wb')) #cannot use JSON because ndarray is not JSON serializable
+        dump(features, open(self.train_data_dir + 'train_data/features.pkl', 'wb')) #cannot use JSON because ndarray is not JSON serializable
 
 
     # data generator, intended to be used in a call to model.fit_generator()

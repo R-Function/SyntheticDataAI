@@ -1,4 +1,5 @@
-image_captioning/data/Flickr8k
+image_captioning/data/Flickr8k/Flickr8k_Dataset/*
+image_captioning/data/Flickr8k/train_data
 image_captioning/data/COCO
 image_captioning/trained_models
-image_captioning/data/word_embeddings
+image_captioning/data/word_embeddings/glove.6B/*

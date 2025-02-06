@@ -1,0 +1,7 @@
+Kleine erklärung wie man pycoco installiert:
+
+    1) > pip install numpy, cython, setuptools
+    2) mit dem Terminal in den ordner PythonAPI navigieren
+    3) > make
+
+eigentlich sehr simpel.
