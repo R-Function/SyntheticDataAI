@@ -28,6 +28,7 @@ def train(model : Model, data_handler : DataHandler, train_data_dir : string, ca
 	fid.close()
 
 	steps = len(image_captions_train)
+	#steps_per_epoch = np.floor(steps/batch_size)
 
 	for i in range(epochs):
 		# create the data generator
@@ -36,14 +37,3 @@ def train(model : Model, data_handler : DataHandler, train_data_dir : string, ca
 		post_rnn_model_concat_hist=model.fit(generator, epochs=1, steps_per_epoch=steps, verbose=1)
 		# save model
 		model.save(destination_dir+'modelConcat_1_' + str(i) + '.keras')
-
-
-# def saveHistoryGraph(history, destination_dir, ):
-# 	# accuracy history
-# 	plt.plot(history.history['accuracy'])
-# 	plt.plot(history.history['val_accuracy'])
-# 	plt.title('model accuracy')
-# 	plt.ylabel('accuracy')
-# 	plt.xlabel('epoch')
-# 	plt.legend(['train', 'test'], loc='upper left')
-# 	plt.savefig(fname="image_captioning/data/eval_data/ROUGE_Score.png", pad_inches=0.01)
