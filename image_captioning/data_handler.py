@@ -18,18 +18,26 @@ from keras.api._tf_keras.keras.preprocessing.image import img_to_array
 from keras.api._tf_keras.keras.applications.vgg16 import preprocess_input
 from keras.api._tf_keras.keras.utils import to_categorical
 from keras.api._tf_keras.keras.models import Model
-    
+
+import constants
+
 class DataHandler:
-    def __init__(self, train_data_dir : string, embedding_dir : string):
+    def __init__(self, 
+                 train_data_dir : string,
+                 token_path : string,
+                 train_set_path : string,
+                 dev_set_path : string, 
+                 test_set_path : string,
+                 embedding_path : string):
         self.train_data_dir = train_data_dir
-        self.embedding_dir = embedding_dir
-        file = open(self.train_data_dir + '/Flickr8k_text/Flickr8k.token.txt', 'r')
+        self.embedding_path = embedding_path
+        file = open(token_path, 'r')
         self.token_text = file.read()
         file.close()
 
-        self.training_set = self._load_data_set_ids(self.train_data_dir + 'Flickr8k_text/Flickr_8k.trainImages.txt')
-        self.dev_set = self._load_data_set_ids(self.train_data_dir + 'Flickr8k_text/Flickr_8k.devImages.txt')
-        self.test_set = self._load_data_set_ids(self.train_data_dir + 'Flickr8k_text/Flickr_8k.testImages.txt')
+        self.training_set = self._load_data_set_ids(train_set_path)
+        self.dev_set = self._load_data_set_ids(dev_set_path)
+        self.test_set = self._load_data_set_ids(test_set_path)
 
         self.translator = str.maketrans("", "", string.punctuation) #translation table that maps all punctuation to None
         self.image_captions             = dict()
@@ -97,36 +105,36 @@ class DataHandler:
         self.caption_train_tokenizer.fit_on_texts(self.corpus) #fit tokenizer on training data
 
         # test   
-        fid = open(self.train_data_dir + "train_data/image_captions.pkl","wb")
+        fid = open(constants.PKL_IMG_CAP_PATH,"wb")
         dump(self.image_captions, fid)
         fid.close()
 
-        fid = open(self.train_data_dir + "train_data/image_captions_train.pkl","wb")
+        fid = open(constants.PKL_IMG_CAP_TRAIN_PATH,"wb")
         dump(self.image_captions_train, fid)
         fid.close()
 
-        fid = open(self.train_data_dir + "train_data/image_captions_dev.pkl","wb")
+        fid = open(constants.PKL_IMG_CAP_DEV_PATH,"wb")
         dump(self.image_captions_dev, fid)
         fid.close()
 
-        fid = open(self.train_data_dir + "train_data/image_captions_test.pkl","wb")
+        fid = open(constants.PKL_IMG_CAP_TEST_PATH,"wb")
         dump(self.image_captions_test, fid)
         fid.close()
 
-        fid = open(self.train_data_dir + "train_data/image_captions_other.pkl","wb")
+        fid = open(constants.PKL_IMG_CAP_OTHER_PATH,"wb")
         dump(self.image_captions_other, fid)
         fid.close()
 
-        fid = open(self.train_data_dir + "train_data/caption_train_tokenizer.pkl","wb")
+        fid = open(constants.PKL_IMG_CAP_TOKENIZER_PATH,"wb")
         dump(self.caption_train_tokenizer, fid)
         fid.close()
 
-        fid = open(self.train_data_dir + "train_data/corpus.pkl","wb")
+        fid = open(constants.PKL_IMG_CAP_CORPUS_PATH,"wb")
         dump(self.corpus, fid)
         fid.close()
 
         corpus_count=Counter(self.corpus)
-        fid = open(self.train_data_dir + "train_data/corpus_count.pkl","wb")
+        fid = open(constants.PKL_IMG_CAP_CORP_COUNT_PATH,"wb")
         dump(corpus_count, fid)
         fid.close()
 
@@ -136,7 +144,7 @@ class DataHandler:
 
     def initialize_pretrained_model(self):
         EMBEDDING_DIM   = 50
-        glove_embedding = path.join(self.embedding_dir, "glove.6B/glove.6B.50d.txt")
+        glove_embedding = path.join(self.embedding_path)
 
         embeddings_index = dict()
         fid = open(glove_embedding,encoding="utf8")
@@ -157,14 +165,14 @@ class DataHandler:
                 # words not found in embedding index will be all-zeros.
                 embedding_matrix[idx] = embed_vector
                 
-        fid = open(self.train_data_dir + "train_data/embedding_matrix.pkl","wb")
+        fid = open(constants.PKL_EMBED_MATRIX_PATH,"wb")
         dump(embedding_matrix, fid)
         fid.close()
 
     def initialize_flicker8k(self, model : Model):
         features = dict()
-        for file in listdir(self.train_data_dir + 'Flickr8k_Dataset/Flickr8k_Dataset'):
-            img_path = path.join(self. train_data_dir, 'Flickr8k_Dataset/Flickr8k_Dataset', file)
+        for file in listdir(self.train_data_dir):
+            img_path = path.join(self. train_data_dir, file)
             img = load_img(img_path, target_size=(224, 224)) #size is 224,224 by default
             x = img_to_array(img) #change to np array
             x = np.expand_dims(x, axis=0) #expand to include batch dim at the beginning
@@ -174,7 +182,7 @@ class DataHandler:
             name_id = file.split('.')[0] #take the file name and use as id in dict
             features[name_id] = fc2_features
 
-        dump(features, open(self.train_data_dir + 'train_data/features.pkl', 'wb')) #cannot use JSON because ndarray is not JSON serializable
+        dump(features, open(constants.PKL_DATA_FEATURES_PATH, 'wb')) #cannot use JSON because ndarray is not JSON serializable
 
 
     # data generator, intended to be used in a call to model.fit_generator()

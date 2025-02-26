@@ -1,3 +1,5 @@
+import constants
+
 from matplotlib import pyplot as plt
 import numpy as np
 import string
@@ -7,23 +9,27 @@ from keras.api._tf_keras.keras.models import Model
 from data_handler import DataHandler
 from image_caption_cnn import define_model_concat
 
-def train(model : Model, data_handler : DataHandler, train_data_dir : string, caption_max_length, vocab_size, batch_size, epochs, destination_dir = "image_captioning/trained_models/"):
-	
-
+def train(model : Model, 
+		  data_handler : DataHandler, 
+		  caption_max_length, 
+		  vocab_size, 
+		  batch_size, 
+		  epochs, 
+		  destination_dir):
 	#4 Training Model
-	fid = open(train_data_dir+"features.pkl","rb")
+	fid = open(constants.PKL_DATA_FEATURES_PATH,"rb")
 	image_features = load(fid)
 	fid.close()
 
-	fid = open(train_data_dir+"caption_train_tokenizer.pkl","rb")
+	fid = open(constants.PKL_IMG_CAP_TOKENIZER_PATH,"rb")
 	caption_train_tokenizer = load(fid)
 	fid.close()
 
-	fid = open(train_data_dir+"image_captions_train.pkl","rb")
+	fid = open(constants.PKL_IMG_CAP_PATH,"rb")
 	image_captions_train = load(fid)
 	fid.close()
 
-	fid = open(train_data_dir+"image_captions_dev.pkl","rb")
+	fid = open(constants.PKL_IMG_CAP_DEV_PATH,"rb")
 	image_captions_dev = load(fid)
 	fid.close()
 

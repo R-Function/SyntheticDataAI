@@ -10,6 +10,8 @@ from keras.api._tf_keras.keras.layers import Dense
 from keras.api._tf_keras.keras.layers import LSTM
 from keras.api._tf_keras.keras.models import Model
 
+import constants
+
 def get_initial_model() -> Model:
     base_model = VGG16(include_top=True)
     base_model.summary()
@@ -41,5 +43,5 @@ def define_model_concat(vocab_size, max_length, embedding_matrix):
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
     # summarize model
     print(model.summary())
-    plot_model(model, to_file='image_captioning/trained_models/model_concat.png', show_shapes=True)
+    plot_model(model, to_file=constants.MODEL_DIAGRAMM_PATH, show_shapes=True)
     return model

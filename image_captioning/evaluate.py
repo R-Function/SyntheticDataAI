@@ -1,4 +1,5 @@
 #7 Evaluating Caption Results
+import constants
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
@@ -18,28 +19,26 @@ _std_beam_width = 5
 _std_vocab_size = 7506
 _std_max_length = 33
 
-train_data_dir = "image_captioning/data/Flickr8k/train_data/"
-test_data_dir  = "image_captioning/data/eval_data/"
 
-def _generate_eval_data(beam_width, vocab_size, max_length):
+def _generate_eval_data(beam_width, vocab_size, max_length, model_path):
     print("\nGenerating Evaluation Data...")
     # extrahiere trainingsdaten
-    fid = open(train_data_dir+"features.pkl","rb")
+    fid = open(constants.PKL_DATA_FEATURES_PATH,"rb")
     features = load(fid)
     fid.close()
 
-    fid = open(train_data_dir+"caption_train_tokenizer.pkl","rb")
+    fid = open(constants.PKL_IMG_CAP_TOKENIZER_PATH,"rb")
     caption_train_tokenizer = load(fid)
     fid.close()
 
-    fid = open(train_data_dir+"image_captions_test.pkl","rb")
+    fid = open(constants.PKL_IMG_CAP_TEST_PATH,"rb")
     image_captions_test = load(fid)
     fid.close()
 
 
     # load the model
     print("Loading model...")
-    pred_model = load_model('image_captioning/trained_models/modelConcat_1_2.h5')
+    pred_model = load_model(model_path)
 
     # wird garnicht verwendet
     # pred_model = load_model('model_3_0.h5')
@@ -62,7 +61,7 @@ def _generate_eval_data(beam_width, vocab_size, max_length):
                 continue
             bar()
         
-    fid = open(test_data_dir+"test_captions_post_concat","wb")
+    fid = open(constants.EVAL_CAP_DATA_PATH,"wb")
     dump(image_captions_candidate, fid)
     fid.close()
 
@@ -77,27 +76,31 @@ def _generate_eval_data(beam_width, vocab_size, max_length):
             #print(image_captions_candidate_beam5[image_fileName])
             bar()
         
-    fid = open(test_data_dir+"test_captions_concate_beam5_post","wb")
+    fid = open(constants.EVAL_CAP_BEAM_PATH,"wb")
     dump(image_captions_candidate_beam5, fid)
     fid.close()
 
 
 #7.1 BLEU
 #greedy bleu
-def eval_BLEU(beam_width = _std_beam_width, vocab_size = _std_vocab_size, max_length = _std_max_length, is_eval_data_generated = True):
+def eval_BLEU(model_path,
+              beam_width = _std_beam_width, 
+              vocab_size = _std_vocab_size, 
+              max_length = _std_max_length, 
+              is_eval_data_generated = True):
     if not is_eval_data_generated:
-        _generate_eval_data(beam_width, vocab_size, max_length)
+        _generate_eval_data(beam_width, vocab_size, max_length, model_path)
     
     # load data
-    fid = open(test_data_dir+"test_captions_post_concat","rb")
+    fid = open(constants.EVAL_CAP_DATA_PATH,"rb")
     image_captions_candidate = load(fid)
     fid.close()
 
-    fid = open(test_data_dir+"test_captions_concate_beam5_post","rb")
+    fid = open(constants.EVAL_CAP_BEAM_PATH,"rb")
     image_captions_candidate_beam5 = load(fid)
     fid.close()
 
-    fid = open(train_data_dir+"image_captions_test.pkl","rb")
+    fid = open(constants.PKL_IMG_CAP_TEST_PATH,"rb")
     image_captions_test = load(fid)
     fid.close()
 
@@ -159,25 +162,29 @@ def eval_BLEU(beam_width = _std_beam_width, vocab_size = _std_vocab_size, max_le
         cell.set_text_props(fontsize=10)  # Adjust font size if necessary
         cell.set_edgecolor('black')
     
-    plt.savefig(fname="image_captioning/data/eval_data/BLEU_Score.png", pad_inches=0.01)
+    plt.savefig(fname=constants.EVAL_BLEU_DEST, pad_inches=0.01)
     plt.show()
 
 
 
-def eval_ROUGE(beam_width = _std_beam_width, vocab_size = _std_vocab_size, max_length = _std_max_length, is_eval_data_generated = True):
+def eval_ROUGE(model_path,
+               beam_width = _std_beam_width, 
+               vocab_size = _std_vocab_size, 
+               max_length = _std_max_length, 
+               is_eval_data_generated = True):
     if not is_eval_data_generated:
-        _generate_eval_data(beam_width, vocab_size, max_length)
+        _generate_eval_data(beam_width, vocab_size, max_length, model_path)
 
     # load data
-    fid = open(test_data_dir+"test_captions_post_concat","rb")
+    fid = open(constants.EVAL_CAP_DATA_PATH,"rb")
     image_captions_candidate = load(fid)
     fid.close()
 
-    fid = open(test_data_dir+"test_captions_concate_beam5_post","rb")
+    fid = open(constants.EVAL_CAP_BEAM_PATH,"rb")
     image_captions_candidate_beam5 = load(fid)
     fid.close()
 
-    fid = open(train_data_dir+"image_captions_test.pkl","rb")
+    fid = open(constants.PKL_IMG_CAP_TEST_PATH,"rb")
     image_captions_test = load(fid)
     fid.close()
     
@@ -263,5 +270,5 @@ def eval_ROUGE(beam_width = _std_beam_width, vocab_size = _std_vocab_size, max_l
         cell.set_text_props(fontsize=10)  # Adjust font size if necessary
         cell.set_edgecolor('black')
     
-    plt.savefig(fname="image_captioning/data/eval_data/ROUGE_Score.png", pad_inches=0.01)
+    plt.savefig(fname=constants.EVAL_ROUGE_DEST, pad_inches=0.01)
     plt.show()
