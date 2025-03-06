@@ -1,6 +1,6 @@
 from os import path
 # filepaths for preprocessed data
-PKL_DATA_DIR = "image_captioning\data\Flickr8k"
+PKL_DATA_DIR = "image_captioning/data/pkl_data/Flickr8k_pkl"
 
 PKL_IMG_CAP_PATH            = path.join(PKL_DATA_DIR,"image_captions.pkl")
 PKL_IMG_CAP_TRAIN_PATH      = path.join(PKL_DATA_DIR,"image_captions_train.pkl")
@@ -23,3 +23,5 @@ EVAL_ROUGE_DEST     = path.join(EVAL_DATA_DIR,"ROUGE_Score.png")
 
 # filepath for image captioning model diagramm
 MODEL_DIAGRAMM_PATH  = 'image_captioning/trained_models/model_concat.png'
+MODEL_HIST_LOSS_PATH = "image_captioning/trained_models/model_loss.png"
+MODEL_HIST_ACC_PATH  = "image_captioning/trained_models/model_acc.png"

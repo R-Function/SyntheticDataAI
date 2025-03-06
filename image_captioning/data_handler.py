@@ -28,7 +28,9 @@ class DataHandler:
                  train_set_path : string,
                  dev_set_path : string, 
                  test_set_path : string,
-                 embedding_path : string):
+                 embedding_path : string,
+                 embedding_dim : int = None):
+        self.embedding_dim = embedding_dim
         self.train_data_dir = train_data_dir
         self.embedding_path = embedding_path
         file = open(token_path, 'r')
@@ -143,16 +145,21 @@ class DataHandler:
 
 
     def initialize_pretrained_model(self):
-        EMBEDDING_DIM   = 50
-        glove_embedding = path.join(self.embedding_path)
+        if(self.embedding_dim is None):
+            EMBEDDING_DIM   = int(self.embedding_path.split("/")[-1].split(".")[-2].rstrip("d"))
+        else:
+            EMBEDDING_DIM   = self.embedding_dim
 
         embeddings_index = dict()
-        fid = open(glove_embedding,encoding="utf8")
+        fid = open(self.embedding_path, encoding="utf8")
         for line in fid:
-            values = line.split()
-            word = values[0]
-            coefs = np.asarray(values[1:], dtype='float32')
-            embeddings_index[word] = coefs
+            try:
+                values = line.split()
+                word = values[0]
+                coefs = np.asarray(values[1:], dtype='float32')
+                embeddings_index[word] = coefs
+            except ValueError:
+                print(ValueError, word)
         fid.close()
 
 
@@ -169,10 +176,10 @@ class DataHandler:
         dump(embedding_matrix, fid)
         fid.close()
 
-    def initialize_flicker8k(self, model : Model):
+    def extract_features(self, model : Model):
         features = dict()
         for file in listdir(self.train_data_dir):
-            img_path = path.join(self. train_data_dir, file)
+            img_path = path.join(self.train_data_dir, file)
             img = load_img(img_path, target_size=(224, 224)) #size is 224,224 by default
             x = img_to_array(img) #change to np array
             x = np.expand_dims(x, axis=0) #expand to include batch dim at the beginning

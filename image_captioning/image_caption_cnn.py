@@ -23,14 +23,14 @@ def get_initial_model() -> Model:
 
 
 #3 Model Definition
-def define_model_concat(vocab_size, max_length, embedding_matrix):
+def define_model_concat(vocab_size, max_length, embedding_matrix, embedding_dim):
     # feature extractor model
     inputs1 = Input(shape=(4096,))
     image_feature = Dropout(0.5)(inputs1)
     image_feature = Dense(256, activation='relu')(image_feature)
     # sequence model
     inputs2 = Input(shape=(max_length,))
-    language_feature = Embedding(vocab_size, 50, weights=[embedding_matrix], input_length=max_length, trainable=False)(inputs2)
+    language_feature = Embedding(vocab_size, embedding_dim, weights=[embedding_matrix], input_length=max_length, trainable=False)(inputs2)
     #Embedding(vocab_size, 256, mask_zero=True)(inputs2) #<<<<<< fix me, add pretrianed embedding
     language_feature = Dropout(0.5)(language_feature)
     language_feature = LSTM(256)(language_feature)

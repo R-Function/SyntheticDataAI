@@ -1,6 +1,9 @@
-from pickle import load
 import sys
+import argparse
+import json
+import constants
 
+from pickle import load
 from evaluate import eval_BLEU, eval_ROUGE
 from module_test import execute_model_test
 from train import train
@@ -8,51 +11,96 @@ from data_handler import DataHandler
 from image_caption_cnn import define_model_concat, get_initial_model
 
 def main() -> int:
+    EXECECUTION_CHOICES = {"prep-data"      : prep_data, 
+                           "train"          : train_model, 
+                           "execute-model"  : execute_model, 
+                           "evaluate"       : evaluate}
+    
+    # Command line Arguments
+    parser = argparse.ArgumentParser("Interface for data preperation, training, executing and evaluating the Image Captioning RNN.")
+    parser.add_argument("config_file", 
+                        help= "The path of the config file. Needs to be a .json document.")
+    parser.add_argument("--execute", 
+                        help= "Specify what part of the programm you want to run. Note that the data only has to be prepped once and then after it has been changed. If this option is left open, everything will be run in order.",
+                        choices=EXECECUTION_CHOICES.keys())
+    args = parser.parse_args()
+
+    # JSON Parser
+    with open(args.config_file) as fp:# hier argsparse argument rein
+        config = json.load(fp)
+
+    # DataHandler Object
+    data_handler = DataHandler(train_data_dir   = config["data files and directories"]["data_dir"],
+                               token_path       = config["data files and directories"]["token_path"],
+                               train_set_path   = config["data files and directories"]["train_set_path"],
+                               dev_set_path     = config["data files and directories"]["dev_set_path"],
+                               test_set_path    = config["data files and directories"]["test_set_path"],
+                               embedding_path   = config["data files and directories"]["embedd_path"])
+    print("\t--> Data Handler initialized!")
+    
+    if args.execute == None:
+        prep_data(config = config, data_handler = data_handler)
+        train_model(config = config, data_handler = data_handler)
+        execute_model(config = config, data_handler = data_handler)
+        evaluate(config = config, data_handler = data_handler)
+    else:
+        EXECECUTION_CHOICES[args.execute](config = config, data_handler = data_handler)
+    
     # name für traindata file
-    data_dir            = 'image_captioning/data/Flickr8k/'
-    embedd_path         = "image_captioning/data/word_embeddings/glove.6B/glove.6B.50d.txt"
-    dest_dir            = "image_captioning/trained_models/"
-    beam_width          = 5
-    vocab_size          = 7506
-    caption_max_length  = 33
-    base_model          = get_initial_model()
-    batch_size          = 8
-    epochs              = 5
-    model_path          = 'image_captioning/trained_models/modelConcat_1_2.h5'
+    # data_dir            = 'image_captioning/data/Flickr8k/Flickr8k_Dataset/Flickr8k_Dataset'
+    # embedd_path         = "image_captioning/data/word_embeddings/glove.6B/glove.840B.300d.txt"
+    # dest_dir            = "image_captioning/trained_models/"
+    # beam_width          = 5
+    # vocab_size          = 7506
+    # caption_max_length  = 33
+    # batch_size          = 8
+    # epochs              = 1
+    # model_path          = 'image_captioning/trained_models/modelConcat_1_2.h5'
 
-    data_handler = DataHandler(data_dir, embedd_path)
-    print("\n--> Data Handler initialized.------------------------------------")
-    #data_handler.initialize_flicker8k(base_model)
-    #print("Flicker8k initialized.")
+    # data_handler = DataHandler(train_data_dir=config["data files and directories"]["data_dir"],
+    #                            token_path="image_captioning/data/Flickr8k/Flickr8k_text/Flickr8k.token.txt",
+    #                            train_set_path="image_captioning/data/Flickr8k/Flickr8k_text/Flickr_8k.trainImages.txt",
+    #                            dev_set_path="image_captioning/data/Flickr8k/Flickr8k_text/Flickr_8k.devImages.txt",
+    #                            test_set_path="image_captioning/data/Flickr8k/Flickr8k_text/Flickr_8k.testImages.txt",
+    #                            embedding_path=embedd_path)
+    
+
+def prep_data(config, data_handler):
+    data_handler.extract_features(get_initial_model())
+    print("\t--> Features Extracted.")
+
     data_handler.initialize_data()
-    print("\n--> Data initialized.--------------------------------------------")
+    print("\t--> Data initialized.")
+
     data_handler.initialize_pretrained_model()
-    print("\n--> Pretrained Model initialized.--------------------------------")
+    print("\t--> Pretrained Model initialized.")
 
-    fid = open("image_captioning/data/Flickr8k/train_data/embedding_matrix.pkl","rb")
-    embedding_matrix = load(fid)
-    fid.close()
-    post_rnn_model_concat = define_model_concat(vocab_size, caption_max_length, embedding_matrix)
+def train_model(config, data_handler):
+    with open(constants.PKL_EMBED_MATRIX_PATH,"rb") as fid:
+        embedding_matrix = load(fid)
 
-    train(model=post_rnn_model_concat, 
-          data_handler=data_handler,
-          caption_max_length= caption_max_length,
-          vocab_size= vocab_size,
-          batch_size=batch_size,
-          epochs=epochs,
-          destination_dir="image_captioning/trained_models/")
-    print("--> Model training finished.--------------------------------")
+    post_rnn_model_concat = define_model_concat(vocab_size       = config["hyperparams"]["vocab_size"],
+                                                max_length       = config["hyperparams"]["caption_max_length"], 
+                                                embedding_matrix = embedding_matrix,
+                                                embedding_dim    = config["hyperparams"]["embedding_dim"])
+
+    train(model              = post_rnn_model_concat, 
+          data_handler       = data_handler,
+          caption_max_length = config["hyperparams"]["caption_max_length"],
+          vocab_size         = config["hyperparams"]["vocab_size"],
+          batch_size         = config["hyperparams"]["batch_size"],
+          epochs             = config["hyperparams"]["epochs"],
+          destination_dir    = config["data files and directories"]["dest_dir"])
     
-    execute_model_test(model_path=model_path, 
-                       test_image_path= 'image_captioning/test/beachball_people.jpg')
+    print("\t--> Model training finished!")
 
-    # eval_BLEU(model_path = model_path)
-    # eval_ROUGE(model_path =model_path)
+def execute_model(config, data_handler):
+    execute_model_test(model_path      = config["data files and directories"]["model_path"], 
+                        test_image_path = config["data files and directories"]["test_img_path"])
     
-
-
-    
-
+def evaluate(config, data_handler):
+    eval_BLEU(model_path  = config["data files and directories"]["model_path"])
+    eval_ROUGE(model_path = config["data files and directories"]["model_path"])
 
 if __name__ == '__main__':
-    sys.exit(main())  # next section explains the use of sys.exit
+    sys.exit(main())

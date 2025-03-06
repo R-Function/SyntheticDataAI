@@ -1,0 +1,21 @@
+{
+    "data files and directories":{
+        "token_path"        : "image_captioning/data/Flickr8k/Flickr8k_text/Flickr8k.token.txt",
+        "train_set_path"    : "image_captioning/data/Flickr8k/Flickr8k_text/Flickr_8k.trainImages.txt",
+        "dev_set_path"      : "image_captioning/data/Flickr8k/Flickr8k_text/Flickr_8k.devImages.txt",
+        "test_set_path"     : "image_captioning/data/Flickr8k/Flickr8k_text/Flickr_8k.testImages.txt",
+        "embedd_path"       : "image_captioning/data/word_embeddings/glove.6B/glove.840B.300d.txt",
+        "data_dir"          : "image_captioning/data/Flickr8k/Flickr8k_Dataset/Flickr8k_Dataset",
+        "dest_dir"          : "image_captioning/trained_models/",
+        "model_path"        : "image_captioning/trained_models/modelConcat_1_2.h5",
+        "test_img_path"     : "image_captioning/test/beachball_people.jpg"
+    },
+    "hyperparams":{
+        "vocab_size"          : 7506,
+        "caption_max_length"  : 33,
+        "batch_size"          : 8,
+        "epochs"              : 1,
+        "beam_search_width"   : 5,
+        "embedding_dim"      : 300
+    }
+}
