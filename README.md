@@ -83,6 +83,3 @@ Die `config.json` enthält die folgenden Parameter:
 ```
 
 ---
-
-## Lizenz
-Dieses Projekt steht unter der MIT-Lizenz. Weitere Informationen in der `LICENSE`-Datei.
