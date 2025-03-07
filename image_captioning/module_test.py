@@ -11,14 +11,15 @@ from data_handler import DataHandler
 from execute_model import extract_feature, generate_caption, generate_caption_beam
 import constants
 
-def execute_model_test(model_path, test_image_path):
+def execute_model_test(model_path, 
+                       test_image_path,
+                       vocab_size,
+                       beam_width,
+                       max_length):
     base_model = VGG16(include_top=True)
     feature_extract_pred_model = Model(inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
     caption_train_tokenizer = load(open(constants.PKL_IMG_CAP_TOKENIZER_PATH, 'rb'))
-    # pre-define the max sequence length (from training)
     max_length = 33
-    # load the model
-    #pred_model = load_model('model_3_0.h5')
     pred_model = load_model(model_path)
     
     photo = extract_feature(feature_extract_pred_model, test_image_path)
@@ -26,9 +27,6 @@ def execute_model_test(model_path, test_image_path):
     print(' '.join(caption))
 
     photo = extract_feature(feature_extract_pred_model, test_image_path)
-    vocab_size = 7506
-    beam_width = 10
-    max_length = 33
     caption, prob = generate_caption_beam(pred_model, caption_train_tokenizer, photo, max_length,vocab_size,beam_width)
     print(caption)
     print(prob)

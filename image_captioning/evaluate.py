@@ -36,17 +36,13 @@ def _generate_eval_data(beam_width, vocab_size, max_length, model_path):
     fid.close()
 
 
-    # load the model
     print("Loading model...")
     pred_model = load_model(model_path)
 
-    # wird garnicht verwendet
-    # pred_model = load_model('model_3_0.h5')
-    # base_model = VGG16(include_top=True) #define the image feature extraction model
-    # feature_extract_pred_model = Model(inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
+ 
 
 
-    #  greedy search nach möglichen caption word kandidaten
+    #  greedy search for possible caption word candidates
     print(f"Generating most probable caption words for {len(image_captions_test.items())} images.")
     image_captions_candidate = dict()
     with alive_bar(len(image_captions_test.items())) as bar:
@@ -73,7 +69,6 @@ def _generate_eval_data(beam_width, vocab_size, max_length, model_path):
                 
             photo = features[image_fileName_feature]
             image_captions_candidate_beam5[image_fileName], _ = generate_caption_beam(pred_model, caption_train_tokenizer, photo, max_length, vocab_size, beam_width)
-            #print(image_captions_candidate_beam5[image_fileName])
             bar()
         
     fid = open(constants.EVAL_CAP_BEAM_PATH,"wb")
@@ -81,8 +76,6 @@ def _generate_eval_data(beam_width, vocab_size, max_length, model_path):
     fid.close()
 
 
-#7.1 BLEU
-#greedy bleu
 def eval_BLEU(model_path,
               beam_width = _std_beam_width, 
               vocab_size = _std_vocab_size, 
@@ -122,19 +115,15 @@ def eval_BLEU(model_path,
             bar()
         
         
-    #print(bleu_score)
 
     
-    # Berechnung und darstellung des BLEU scores
     bleu_score_array = np.fromiter(bleu_score.values(), dtype=float)
-    # print('mean bleu='+str(np.mean(bleu_score_array)) + '; median bleu='+str(np.median(bleu_score_array))+'; max bleu='+str(np.max(bleu_score_array))+'; min bleu='+str(np.min(bleu_score_array))+'; std bleu='+str(np.std(bleu_score_array)))
     bleu_score_all =  [str(np.mean(bleu_score_array)),
                        str(np.median(bleu_score_array)),
                        str(np.max(bleu_score_array)),
                        str(np.min(bleu_score_array)),
                        str(np.std(bleu_score_array))]
     bleu_score_beam_5array = np.fromiter(bleu_score_beam5.values(), dtype=float)
-    # print('mean beam5 bleu='+str(np.mean(bleu_score_beam_5array)) + '; median beam5 bleu='+str(np.median(bleu_score_beam_5array))+'; max beam5 bleu='+str(np.max(bleu_score_beam_5array))+'; min beam5 bleu='+str(np.min(bleu_score_beam_5array))+'; std beam5 bleu='+str(np.std(bleu_score_beam_5array)))
     bleu_score_beam_all =  [str(np.mean(bleu_score_beam_5array)),
                             str(np.median(bleu_score_beam_5array)),
                             str(np.max(bleu_score_beam_5array)),
@@ -198,7 +187,6 @@ def eval_ROUGE(model_path,
         
         rouge_score[image_fileName] = rouge(cand, ref_cap_reformat)
 
-    #print(rouge_score)
 
     #rouge beam5
     rouge_score_beam5 = dict()
@@ -213,7 +201,6 @@ def eval_ROUGE(model_path,
             rouge_score_beam5[image_fileName] = rouge(cand, ref_cap_reformat)
             bar()
 
-    #print(rouge_score)
 
     num_test = len(rouge_score_beam5)
 
@@ -267,7 +254,7 @@ def eval_ROUGE(model_path,
                     loc="center")
     table.auto_set_column_width([0, 1, 2])
     for (i, j), cell in table.get_celld().items():
-        cell.set_text_props(fontsize=10)  # Adjust font size if necessary
+        cell.set_text_props(fontsize=10)
         cell.set_edgecolor('black')
     
     plt.savefig(fname=constants.EVAL_ROUGE_DEST, pad_inches=0.01)

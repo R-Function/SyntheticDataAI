@@ -20,7 +20,8 @@ def main() -> int:
     parser = argparse.ArgumentParser("Interface for data preperation, training, executing and evaluating the Image Captioning RNN.")
     parser.add_argument("config_file", 
                         help= "The path of the config file. Needs to be a .json document.")
-    parser.add_argument("--execute", 
+    parser.add_argument("-e",
+                        "--execute", 
                         help= "Specify what part of the programm you want to run. Note that the data only has to be prepped once and then after it has been changed. If this option is left open, everything will be run in order.",
                         choices=EXECECUTION_CHOICES.keys())
     args = parser.parse_args()
@@ -45,25 +46,7 @@ def main() -> int:
         evaluate(config = config, data_handler = data_handler)
     else:
         EXECECUTION_CHOICES[args.execute](config = config, data_handler = data_handler)
-    
-    # name für traindata file
-    # data_dir            = 'image_captioning/data/Flickr8k/Flickr8k_Dataset/Flickr8k_Dataset'
-    # embedd_path         = "image_captioning/data/word_embeddings/glove.6B/glove.840B.300d.txt"
-    # dest_dir            = "image_captioning/trained_models/"
-    # beam_width          = 5
-    # vocab_size          = 7506
-    # caption_max_length  = 33
-    # batch_size          = 8
-    # epochs              = 1
-    # model_path          = 'image_captioning/trained_models/modelConcat_1_2.h5'
 
-    # data_handler = DataHandler(train_data_dir=config["data files and directories"]["data_dir"],
-    #                            token_path="image_captioning/data/Flickr8k/Flickr8k_text/Flickr8k.token.txt",
-    #                            train_set_path="image_captioning/data/Flickr8k/Flickr8k_text/Flickr_8k.trainImages.txt",
-    #                            dev_set_path="image_captioning/data/Flickr8k/Flickr8k_text/Flickr_8k.devImages.txt",
-    #                            test_set_path="image_captioning/data/Flickr8k/Flickr8k_text/Flickr_8k.testImages.txt",
-    #                            embedding_path=embedd_path)
-    
 
 def prep_data(config, data_handler):
     data_handler.extract_features(get_initial_model())
@@ -95,8 +78,11 @@ def train_model(config, data_handler):
     print("\t--> Model training finished!")
 
 def execute_model(config, data_handler):
-    execute_model_test(model_path      = config["data files and directories"]["model_path"], 
-                        test_image_path = config["data files and directories"]["test_img_path"])
+    execute_model_test(model_path       = config["data files and directories"]["model_path"], 
+                       test_image_path  = config["data files and directories"]["test_img_path"],
+                       vocab_size       = config["hyperparams"]["vocab_size"],
+                       beam_width       = config["hyperparams"]["beam_search_width"],
+                       max_length       = config["hyperparams"]["caption_max_length"])
     
 def evaluate(config, data_handler):
     eval_BLEU(model_path  = config["data files and directories"]["model_path"])

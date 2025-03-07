@@ -16,7 +16,6 @@ def train(model : Model,
 		  batch_size, 
 		  epochs, 
 		  destination_dir):
-	#4 Training Model
 	fid = open(constants.PKL_DATA_FEATURES_PATH,"rb")
 	image_features = load(fid)
 	fid.close()
@@ -34,7 +33,6 @@ def train(model : Model,
 	fid.close()
 
 	steps = len(image_captions_train)
-	#steps_per_epoch = np.floor(steps/batch_size)
 	post_rnn_model_concat_hist = list()
 
 	for i in range(epochs):
