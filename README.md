@@ -83,3 +83,11 @@ Die `config.json` enthält die folgenden Parameter:
 ```
 
 ---
+
+
+# Stable Diffusion Google Collab Notebook
+
+Benutzung:
+
+1. GoogleCollabStableD.ipynb in Google Collab öffnen
+2. \SyntheticDataAI\synthetic_data\Captions\captions.txt als Input Datei benutzen 
